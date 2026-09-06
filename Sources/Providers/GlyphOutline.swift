@@ -409,4 +409,19 @@ enum GlyphOutline {
          CGPoint(x: 0.6820, y: 0.2000), CGPoint(x: 0.0200, y: 0.2000)]
     ]
 
+    /// Kimi's mark: a simple crescent moon, constructed rather than traced.
+    /// The shape is one continuous loop forming a crescent.
+    static let kimi: [[CGPoint]] = [
+        [
+         CGPoint(x: 0.5000, y: 0.0500), CGPoint(x: 0.3900, y: 0.0900), CGPoint(x: 0.3000, y: 0.1700),
+         CGPoint(x: 0.2400, y: 0.2800), CGPoint(x: 0.2200, y: 0.4100), CGPoint(x: 0.2400, y: 0.5400),
+         CGPoint(x: 0.3000, y: 0.6500), CGPoint(x: 0.3900, y: 0.7300), CGPoint(x: 0.5000, y: 0.7700),
+         CGPoint(x: 0.6200, y: 0.7600), CGPoint(x: 0.7200, y: 0.7100), CGPoint(x: 0.7900, y: 0.6300),
+         CGPoint(x: 0.6500, y: 0.6700), CGPoint(x: 0.5300, y: 0.6500), CGPoint(x: 0.4300, y: 0.5800),
+         CGPoint(x: 0.3600, y: 0.4800), CGPoint(x: 0.3300, y: 0.3600), CGPoint(x: 0.3500, y: 0.2400),
+         CGPoint(x: 0.4100, y: 0.1400), CGPoint(x: 0.5000, y: 0.0700), CGPoint(x: 0.6100, y: 0.0400),
+         CGPoint(x: 0.5000, y: 0.0500)
+        ]
+    ]
+
 }

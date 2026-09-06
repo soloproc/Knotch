@@ -163,6 +163,7 @@ struct ProviderSnapshot: Identifiable, Equatable {
         case "codex":      return "Sign in to Codex to read your usage"
         case "gemini":     return "Sign in to Antigravity to read your usage"
         case "glm":        return "Set up a GLM Coding Plan key for a coding tool to read your usage"
+        case "kimi":       return "Set a KIMI_API_KEY to read your Kimi usage"
         default:           return "Sign in to \(displayName) to read your usage"
         }
     }
