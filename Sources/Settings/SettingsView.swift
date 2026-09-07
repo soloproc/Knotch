@@ -262,8 +262,10 @@ private struct AccountRow: View {
     let signIn: (String) -> Bool
     let switchAccount: (String) -> Bool
     let retry: (String) -> Void
+    @State private var kimiKey: String = ""
 
     private var isConnected: Bool { preferences.isConnected(provider.id) }
+    private var isKimi: Bool { provider.id == "kimi" }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -364,6 +366,30 @@ private struct AccountRow: View {
                  + "login. Choose Allow access… above, then Always Allow.")
                 .foregroundStyle(.orange)
                 .fixedSize(horizontal: false, vertical: true)
+        } else if isKimi {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Enter your Kimi API key to read usage.")
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 8) {
+                    SecureField("sk-...", text: $kimiKey)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 280)
+                    Button("Save") {
+                        guard !kimiKey.isEmpty else { return }
+                        do {
+                            try KimiCredentials.save(token: kimiKey)
+                            kimiKey = ""
+                            _ = signIn(provider.id)
+                        } catch {
+                            // Silently ignore write failures; the field stays
+                            // and the user can retry.
+                        }
+                    }
+                    .controlSize(.small)
+                    .disabled(kimiKey.isEmpty)
+                }
+            }
         } else {
             HStack(spacing: 8) {
                 Text(provider.signIn.explanation)
@@ -373,7 +399,6 @@ private struct AccountRow: View {
                     Button(title) { _ = signIn(provider.id) }
                         .controlSize(.small)
                 }
-
             }
         }
     }

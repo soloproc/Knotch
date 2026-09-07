@@ -33,4 +33,15 @@ enum KimiCredentials {
 
         return nil
     }
+
+    static func save(token: String, label: String? = nil) throws {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let configDir = home.appendingPathComponent(".kimi")
+        try FileManager.default.createDirectory(at: configDir, withIntermediateDirectories: true)
+        let configURL = configDir.appendingPathComponent("config.json")
+        var json: [String: Any] = ["api_key": token]
+        if let label { json["label"] = label }
+        let data = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys])
+        try data.write(to: configURL, options: .atomic)
+    }
 }

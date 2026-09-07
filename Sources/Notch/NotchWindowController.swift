@@ -341,13 +341,6 @@ final class NotchWindowController {
         } else if model.isExpanded, notchRect.contains(local) {
             target = cellIndex(along: placement.along(of: local))
         }
-        if model.isExpanded, notchRect.contains(local) {
-            target = cellIndex(along: placement.along(of: local))
-        } else if model.isExpanded, let current = model.hoveredIndex,
-                  let card = tooltipRect(index: current),
-                  card.contains(local) {
-            target = current
-        }
 
         let overHandle = model.isExpanded && isOverHandle(local)
         if model.isHoveringSettings != overHandle {

@@ -112,10 +112,18 @@ final class UsageStore: ObservableObject {
     /// Enough to list the providers in settings without exposing them.
     var providerSummaries: [ProviderSummary] {
         providers.map { provider in
-            ProviderSummary(id: provider.id, name: provider.displayName,
-                            glyph: provider.glyph, account: provider.account(),
-                            signIn: provider.signInRoute,
-                            wasRefusedAccess: refusedAccess.contains(provider.id))
+            // Disconnected providers are not read and their credentials are not
+            // touched — skipping account() avoids keychain prompts for providers
+            // the user has switched off.
+            let isDisconnected = disconnected.contains(provider.id)
+            return ProviderSummary(
+                id: provider.id,
+                name: provider.displayName,
+                glyph: provider.glyph,
+                account: isDisconnected ? nil : provider.account(),
+                signIn: provider.signInRoute,
+                wasRefusedAccess: refusedAccess.contains(provider.id)
+            )
         }
     }
 
