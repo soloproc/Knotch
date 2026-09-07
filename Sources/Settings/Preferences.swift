@@ -91,7 +91,7 @@ final class Preferences: ObservableObject {
     /// at all.
     let isFirstLaunch: Bool
 
-    /// The bundle identifier before the app was renamed to Codenotch.
+    /// The bundle identifier before the app was renamed to Knotch.
     ///
     /// A bundle id is the name of the defaults domain, so renaming the app
     /// silently moved every setting to a new, empty one — connection choices,
@@ -186,7 +186,7 @@ final class Preferences: ObservableObject {
     /// update, and wiping data on every Sparkle update would be catastrophic.
     /// It has to be something the user asks for.
     static func eraseAllData() {
-        let bundleID = Bundle.main.bundleIdentifier ?? "com.vinz.codenotch"
+        let bundleID = Bundle.main.bundleIdentifier ?? "com.soloproc.knotch"
         UserDefaults.standard.removePersistentDomain(forName: bundleID)
         UserDefaults.standard.synchronize()
 
@@ -220,7 +220,7 @@ final class Preferences: ObservableObject {
             // Commonly refused for an app running from a build directory rather
             // than /Applications, which is worth saying plainly.
             Log.usage.error("launch at login failed: \(error.localizedDescription, privacy: .public)")
-            launchAtLoginProblem = "macOS refused this — try moving Codenotch to /Applications."
+            launchAtLoginProblem = "macOS refused this — try moving Knotch to /Applications."
             launchAtLogin = Self.isRegisteredForLogin
         }
     }

@@ -103,7 +103,7 @@ enum CodexBridge {
             .object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
         return [
             #"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"clientInfo":"#
-                + #"{"name":"codenotch","title":"Codenotch","version":"\#(version)"}}}"#,
+                + #"{"name":"codenotch","title":"Knotch","version":"\#(version)"}}}"#,
             #"{"jsonrpc":"2.0","method":"initialized","params":{}}"#,
             #"{"jsonrpc":"2.0","id":\#(requestID),"method":"account/rateLimits/read","params":null}"#
         ]

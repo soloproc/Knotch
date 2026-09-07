@@ -1,5 +1,5 @@
 import XCTest
-@testable import Codenotch
+@testable import Knotch
 
 final class UsageBandTests: XCTestCase {
     func testBandsMatchTheDesignFrame() {

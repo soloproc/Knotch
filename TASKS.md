@@ -1,4 +1,4 @@
-# Codenotch — Tasks
+# Knotch — Tasks
 
 Full detail in [`docs/plans/2026-08-28-usage-notch-plan.md`](docs/plans/2026-08-28-usage-notch-plan.md).
 Design spec in [`docs/specs/2026-08-28-usage-notch-design.md`](docs/specs/2026-08-28-usage-notch-design.md).
@@ -8,7 +8,7 @@ Design spec in [`docs/specs/2026-08-28-usage-notch-design.md`](docs/specs/2026-0
 - [x] `Makefile` (`gen` / `build` / `test` / `run` / `clean`)
 - [x] `.gitignore`, `README.md`, docs, design frames committed
 - [x] `Sources/Info.plist`
-- [x] `Sources/App/CodenotchMain.swift` + `AppDelegate` — launches with no window
+- [x] `Sources/App/KnotchMain.swift` + `AppDelegate` — launches with no window
 - [x] `make run` starts a Dock-less agent process
 
 ## M1 — The notch surface
@@ -553,7 +553,7 @@ and the tooltip header is dated.
 
 ### Accounts in settings
 
-Codenotch runs **no OAuth flow of its own**. It borrows a credential each tool
+Knotch runs **no OAuth flow of its own**. It borrows a credential each tool
 already holds — Claude Code's keychain token, Cursor's editor session, Codex's
 `auth.json` — so there is no account for it to connect, and a "Connect" button
 would be theatre. What there *is* to show is whose readings these are:
@@ -792,7 +792,7 @@ hundredths of a point wide; that is a fact about arcs, not a bug.
 ## Managing accounts from Settings
 
 The ask was "adjust login and logout through settings". Taken literally there is
-nothing to adjust: Codenotch runs no OAuth flow of its own, so it has no session
+nothing to adjust: Knotch runs no OAuth flow of its own, so it has no session
 to end. What it has is a decision about *whether to read* each borrowed
 credential, which is the same control under an honest name.
 
@@ -822,7 +822,7 @@ credential, which is the same control under an honest name.
       launch. `SignOutTests.testTheReadingDoesNotComeBackOnTheNextLaunch` is the
       case a plain disconnect fails.
 - [x] `WebSessionProvider.signOut()` clears its own cookies — the one true
-      logout in the app, because that session is the only one Codenotch created.
+      logout in the app, because that session is the only one Knotch created.
       Scoped to the site's host: the data store is shared, so emptying it would
       sign the user out of every other web provider too. Nothing ships on this
       path today, but the button would silently lie without it.
@@ -892,7 +892,7 @@ Two things worth keeping in mind:
       state, and it becomes `accepted` once the ticket is stapled.
 - [ ] **Store notary credentials** — needs an app-specific password, so it has
       to be run by hand once:
-      `xcrun notarytool store-credentials Codenotch --apple-id <id> --team-id 6WFPL8B9FB --password <app-specific-password>`
+      `xcrun notarytool store-credentials Knotch --apple-id <id> --team-id 6WFPL8B9FB --password <app-specific-password>`
 
 ### Automatic updates
 
@@ -951,7 +951,7 @@ macOS does not remove `~/Library` when an app is trashed, so a reinstall comes
 back with the old readings, the old choices and the old first-run flag — which
 is what makes a reinstall look like the app is broken.
 
-- [x] **Reset Codenotch…** in Settings: clears the defaults domain, caches,
+- [x] **Reset Knotch…** in Settings: clears the defaults domain, caches,
       WebKit and HTTP storage, then quits. Behind a confirmation, and the alert
       says what it does *not* touch — "reset" could reasonably be read as
       signing you out of Claude Code or Cursor, which it cannot do.
@@ -960,7 +960,7 @@ is what makes a reinstall look like the app is broken.
 
 ### Changing which account is read
 
-Codenotch cannot switch the account. The credential belongs to Claude Code,
+Knotch cannot switch the account. The credential belongs to Claude Code,
 Cursor or Codex, and the most this can honestly do is open the thing that owns
 it and then notice when the answer changes.
 
@@ -1091,7 +1091,7 @@ it and then notice when the answer changes.
 - [x] Reset is alone in its own section, and last. It used to sit a few pixels
       under a row of account switches, which is one slip from erasing
       everything.
-- [x] The "Codenotch never signs in" explanation moved into Integrations,
+- [x] The "Knotch never signs in" explanation moved into Integrations,
       beside the switches it explains, rather than stranded under a page about
       something else.
 - [x] 500 x 660. Without a row of tab titles to fit, the width is set by the
@@ -1112,7 +1112,7 @@ it and then notice when the answer changes.
       exists. Harmless (snapshots are built from `providers`, so it is ignored)
       but it never gets collected.
 
-## Renaming to Codenotch
+## Renaming to Knotch
 
 - [x] Every occurrence renamed, including the bundle identifier
       (`com.vinz.codenotch`), scheme, target, test target and log subsystem.
@@ -1439,7 +1439,7 @@ Not an icon problem at all: the app had no Dock tile for an icon to sit on.
       Reopen` hook added for the Hide option. The notch stays where it is.
 
 ## Decisions needed
-- [ ] Final app name (`Codenotch` is a placeholder)
+- [ ] Final app name (`Knotch` is a placeholder)
 - [x] ~~Which service is the third glyph in the mockup?~~ Perplexity — its mark,
       traced off the frame, matches. Wired up as `ProviderGlyph.third`.
 - [ ] Plan ceilings: configured by hand, or inferred from observed peak usage?

@@ -1,4 +1,4 @@
-# Codenotch
+# Knotch
 
 A macOS app that pins a small black notch to a screen edge, showing how much of
 each coding assistant's usage limit you have burned — and whether it is still
@@ -21,7 +21,7 @@ two never disagree.
 | **GLM** | official | Z.ai's Coding Plan monitor endpoint, with a key borrowed from whichever coding tool already holds one — Claude Code's `settings.json`, ZCode, or OpenCode. |
 | **Kimi** | config/env | A `KIMI_API_KEY` environment variable or `~/.kimi/config.json` holding a Moonshot API key. |
 
-Codenotch never signs in anywhere. Every reading is borrowed from a credential
+Knotch never signs in anywhere. Every reading is borrowed from a credential
 or session a tool on your Mac already holds — install and sign in to any of
 them, and its ring appears. Switching a provider off in Settings stops its
 credential being read at all and forgets the readings taken from it; it does
@@ -56,7 +56,7 @@ The app itself can show a Dock icon, a menu bar icon, or neither.
 
 ## Updates
 
-Codenotch updates itself. [Sparkle](https://sparkle-project.org) checks daily
+Knotch updates itself. [Sparkle](https://sparkle-project.org) checks daily
 and installs in the background without prompting; Settings says so and can
 switch it off. Every update is EdDSA-signed, so nothing installs that wasn't
 built and signed by the maintainer.

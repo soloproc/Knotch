@@ -1,7 +1,7 @@
 export DEVELOPER_DIR := /Applications/Xcode.app/Contents/Developer
 
-PROJECT := Codenotch.xcodeproj
-SCHEME  := Codenotch
+PROJECT := Knotch.xcodeproj
+SCHEME  := Knotch
 DEST    := platform=macOS,arch=arm64
 
 .PHONY: gen build test run clean
@@ -20,8 +20,8 @@ test: gen
 run: build
 	@APP=$$(xcodebuild -project $(PROJECT) -scheme $(SCHEME) -destination '$(DEST)' \
 		-configuration Debug -showBuildSettings 2>/dev/null \
-		| awk -F' = ' '/ BUILT_PRODUCTS_DIR/ {print $$2; exit}')/Codenotch.app; \
-	pkill -x Codenotch || true; \
+		| awk -F' = ' '/ BUILT_PRODUCTS_DIR/ {print $$2; exit}')/Knotch.app; \
+	pkill -x Knotch || true; \
 	open "$$APP"
 
 clean:
@@ -40,7 +40,7 @@ clean:
 # → App-Specific Passwords. Not your Apple ID password.
 
 RELEASE_DIR := build/release
-APP_NAME    := Codenotch
+APP_NAME    := Knotch
 # The label of the stored notarytool credential in the login keychain, not
 # anything to do with the app's name — it was created before the rename and
 # renaming the variable is what broke `make release` after it. Recreating it
@@ -99,7 +99,7 @@ notarize: dmg
 	xcrun stapler staple $(DMG)
 
 # Sparkle ships its tools inside the resolved package artifacts.
-SPARKLE_BIN = $(shell dirname $$(find $$HOME/Library/Developer/Xcode/DerivedData/Codenotch-*/SourcePackages/artifacts/sparkle -name generate_appcast 2>/dev/null | head -1))
+SPARKLE_BIN = $(shell dirname $$(find $$HOME/Library/Developer/Xcode/DerivedData/Knotch-*/SourcePackages/artifacts/sparkle -name generate_appcast 2>/dev/null | head -1))
 
 # The feed customers' copies poll. Signs each update with the EdDSA private key
 # in the login keychain — Sparkle installs nothing that key did not sign, so a

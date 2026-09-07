@@ -1,4 +1,4 @@
-name: Codenotch
+name: Knotch
 options:
   bundleIdPrefix: com.vinz
   deploymentTarget:
@@ -40,7 +40,7 @@ packages:
     from: "2.6.0"
 
 targets:
-  Codenotch:
+  Knotch:
     type: application
     platform: macOS
     sources:
@@ -54,8 +54,8 @@ targets:
         # notch is ambient, but the *app* still has to be findable: without a
         # Dock tile there is nothing to click to open it, nothing in Cmd-Tab,
         # and no obvious way to reach settings or quit.
-        CFBundleName: Codenotch
-        CFBundleDisplayName: Codenotch
+        CFBundleName: Knotch
+        CFBundleDisplayName: Knotch
         LSMinimumSystemVersion: "26.0"
         # Sources/Info.plist is *generated* from this block, so editing that
         # file directly is undone by the next `make gen`. Pointing both at the
@@ -88,27 +88,27 @@ targets:
         GENERATE_INFOPLIST_FILE: "NO"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
 
-  CodenotchTests:
+  KnotchTests:
     type: bundle.unit-test
     platform: macOS
     sources:
       - path: Tests
     dependencies:
-      - target: Codenotch
+      - target: Knotch
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.vinz.codenotch.tests
         GENERATE_INFOPLIST_FILE: "YES"
 
 schemes:
-  Codenotch:
+  Knotch:
     build:
       targets:
-        Codenotch: all
-        CodenotchTests: [test]
+        Knotch: all
+        KnotchTests: [test]
     run:
       config: Debug
     test:
       config: Debug
       targets:
-        - CodenotchTests
+        - KnotchTests

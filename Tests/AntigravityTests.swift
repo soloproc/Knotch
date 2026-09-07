@@ -1,6 +1,6 @@
 import XCTest
 import Sparkle
-@testable import Codenotch
+@testable import Knotch
 
 /// Fixtures are the real thing: the keychain payload's shape and the actual
 /// `loadCodeAssist` response from a signed-in install.

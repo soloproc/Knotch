@@ -1,6 +1,6 @@
 import SQLite3
 import XCTest
-@testable import Codenotch
+@testable import Knotch
 
 /// Codex records its own rate-limit snapshots in the rollout log, so no
 /// credential and no network are needed.
