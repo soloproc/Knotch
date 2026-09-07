@@ -72,7 +72,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     + [CursorLocalProvider(), CodexLocalProvider(), AntigravityProvider(),
                        GLMProvider(), KimiProvider()]
                     + webProviders,
-                disconnected: preferences.disconnectedProviders
+                disconnected: preferences.disconnectedProviders,
+                sortOrder: { [weak preferences] ids in
+                    preferences?.sortProviderIDs(ids) ?? ids
+                }
             )
 
             // The stored edge goes in before the panel is ever put up. The
@@ -149,6 +152,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             preferences.$disconnectedProviders
                 .receive(on: RunLoop.main)
                 .sink { [weak store] in store?.disconnected = $0 }
+                .store(in: &cancellables)
+
+            preferences.$providerOrder
+                .receive(on: RunLoop.main)
+                .sink { [weak store] _ in store?.reorder() }
                 .store(in: &cancellables)
 
             store.$snapshots

@@ -64,6 +64,35 @@ final class NotchWindowController {
         }
         .store(in: &cancellables)
 
+        // Resize and relocate when the user changes the notch scale in Settings.
+        NotificationCenter.default.publisher(
+            for: .notchScaleChanged
+        )
+        .sink { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.model.layoutRevision += 1
+                self?.relocate()
+            }
+        }
+        .store(in: &cancellables)
+        NotificationCenter.default.publisher(
+            for: .notchScaleChanged
+        )
+        .sink { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.model.layoutRevision += 1
+                self?.relocate()
+            }
+        }
+        .store(in: &cancellables)
+        NotificationCenter.default.publisher(
+            for: .notchScaleChanged
+        )
+        .sink { [weak self] _ in
+            MainActor.assumeIsolated { self?.relocate() }
+        }
+        .store(in: &cancellables)
+
         model.$hoveredIndex
             .sink { [weak self] _ in
                 MainActor.assumeIsolated { self?.updateInteractiveRects() }
@@ -302,6 +331,16 @@ final class NotchWindowController {
         setExpanded(liveRect.contains(local) || overTooltip)
 
         var target: Int?
+        // Tooltip first: when the pointer is on the card it should stay open,
+        // even if the crossing passes through a gap between cells where the
+        // notch rect is technically true but no cell is hit.
+        if model.isExpanded, let current = model.hoveredIndex,
+           let card = tooltipRect(index: current),
+           card.contains(local) {
+            target = current
+        } else if model.isExpanded, notchRect.contains(local) {
+            target = cellIndex(along: placement.along(of: local))
+        }
         if model.isExpanded, notchRect.contains(local) {
             target = cellIndex(along: placement.along(of: local))
         } else if model.isExpanded, let current = model.hoveredIndex,

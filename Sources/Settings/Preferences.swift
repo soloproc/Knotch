@@ -47,6 +47,25 @@ final class Preferences: ObservableObject {
         }
     }
 
+    /// A multiplier applied to the whole notch surface. 1.0 is the original
+    /// design-frame scale; smaller values make the panel more compact.
+    @Published var notchScale: Double {
+        didSet {
+            let clamped = max(0.5, min(1.5, notchScale))
+            if clamped != notchScale { notchScale = clamped }
+            defaults.set(clamped, forKey: Keys.notchScale)
+            UserDefaults.standard.set(clamped, forKey: Design.scaleKey)
+            NotchLayout.recompute()
+            NotificationCenter.default.post(name: .notchScaleChanged, object: nil)
+        }
+    }
+
+    /// The user's chosen order of provider IDs. Providers not listed here are
+    /// sorted after the listed ones, in their original registration order.
+    @Published var providerOrder: [String] {
+        didSet { defaults.set(providerOrder, forKey: Keys.providerOrder) }
+    }
+
     /// Set when the login-item request was refused, so the UI can say so rather
     /// than quietly flipping the switch back.
     @Published private(set) var launchAtLoginProblem: String?
@@ -60,6 +79,8 @@ final class Preferences: ObservableObject {
         static let presence = "appPresence"
         static let edge = "notchEdge"
         static let lastSeenVersion = "lastSeenVersion"
+        static let notchScale = "notchScale"
+        static let providerOrder = "providerOrder"
     }
 
     /// True the very first time this copy runs, and never again.
@@ -77,7 +98,7 @@ final class Preferences: ObservableObject {
     /// the notch's mode, the archived readings, all apparently lost. Copying
     /// the old domain across once is the difference between a rename and what
     /// looks like a reset.
-    private static let previousDomain = "com.vinz.usagenotch"
+    private static nonisolated let previousDomain = "com.vinz.usagenotch"
 
     static func migrateFromPreviousName(into defaults: UserDefaults = .standard,
                                         from domain: String = previousDomain) {
@@ -116,9 +137,19 @@ final class Preferences: ObservableObject {
         // Absent means nothing has been shown yet, which is true of a fresh
         // install — so the current release reads as new to it.
         self.lastSeenVersion = defaults.string(forKey: Keys.lastSeenVersion)
+        // Size: absent means first launch, so default to the compact default.
+        let savedScale = defaults.double(forKey: Keys.notchScale)
+        self.notchScale = savedScale > 0 ? savedScale : 0.82
+        // Provider order: empty means "use registration order".
+        self.providerOrder = defaults.stringArray(forKey: Keys.providerOrder) ?? []
         // Read from the system rather than from our own store: the user can turn
         // this off in System Settings, and a remembered `true` would then be a lie.
         self.launchAtLogin = Self.isRegisteredForLogin
+        // Make sure Design.scale reads the same value. Done after all stored
+        // properties are initialized because `NotchLayout.recompute()` may
+        // observe on the main actor.
+        UserDefaults.standard.set(self.notchScale, forKey: Design.scaleKey)
+        NotchLayout.recompute()
     }
 
     func isConnected(_ providerID: String) -> Bool {
@@ -130,6 +161,17 @@ final class Preferences: ObservableObject {
             disconnectedProviders.remove(providerID)
         } else {
             disconnectedProviders.insert(providerID)
+        }
+    }
+
+    /// Sort a list of provider IDs according to the user's chosen order.
+    func sortProviderIDs(_ ids: [String]) -> [String] {
+        guard !providerOrder.isEmpty else { return ids }
+        let orderMap = Dictionary(uniqueKeysWithValues: providerOrder.enumerated().map { ($1, $0) })
+        return ids.sorted {
+            let lhs = orderMap[$0] ?? Int.max
+            let rhs = orderMap[$1] ?? Int.max
+            return lhs < rhs
         }
     }
 
@@ -182,4 +224,8 @@ final class Preferences: ObservableObject {
             launchAtLogin = Self.isRegisteredForLogin
         }
     }
+}
+
+extension Notification.Name {
+    static let notchScaleChanged = Notification.Name("notchScaleChanged")
 }

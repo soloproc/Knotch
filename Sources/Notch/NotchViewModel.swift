@@ -53,6 +53,10 @@ final class NotchViewModel: ObservableObject {
     /// the controller says otherwise, which reads as "no screen known yet".
     @Published var screenSize: CGSize = .zero
 
+    /// Bumped whenever `NotchLayout.recompute()` runs, so SwiftUI views that
+    /// read `NotchLayout` constants know to redraw.
+    @Published var layoutRevision: Int = 0
+
     /// The same screen minus the menu bar and the Dock.
     ///
     /// A horizontal notch starts at the *usable* edge and grows inward from
@@ -229,7 +233,6 @@ final class NotchViewModel: ObservableObject {
         }
     }
 
-
     /// Where the tooltip's tail tip sits, measured in from the bezel: just off
     /// the inner face of a shape that the extension has made deeper.
     var tooltipInset: CGFloat {
@@ -313,9 +316,9 @@ final class NotchViewModel: ObservableObject {
     /// Where it is joining the display's own notch, folding away means becoming
     /// exactly that notch — same width, same height. The resting pill is the
     /// wrong object there: it hangs below the hardware as a separate little
-    /// tab, which is the very seam this placement exists to remove. Matching
-    /// the hardware instead means nothing shows at rest at all, and reaching
-    /// for it makes the notch itself grow.
+    /// tab, which is the very seam this placement exists to remove. Matching it
+    /// instead means nothing shows at rest at all, and reaching for it makes
+    /// the notch itself grow.
     var notchLength: CGFloat {
         if isExpanded { return shapeLength }
         return hardwareNotch?.width ?? NotchLayout.pillHeight

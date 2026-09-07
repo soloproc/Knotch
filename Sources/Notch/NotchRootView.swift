@@ -5,6 +5,9 @@ struct NotchRootView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        // Force re-render whenever layout constants change (e.g. scale slider).
+        let _ = model.layoutRevision
+        // Measured rather than assumed: the panel's real size is whatever
         // Measured rather than assumed: the panel's real size is whatever
         // AppKit settled on, and the notch has to sit flush against *that*
         // edge, not against the size we asked for.

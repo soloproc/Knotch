@@ -5,6 +5,14 @@ import XCTest
 /// These pin the ratios the frame fixes, so a change to `Design.scale` resizes
 /// everything without silently reshaping it.
 final class NotchLayoutTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        // Pin the scale to the design-frame reference so these tests verify
+        // proportions, not the user's chosen size.
+        UserDefaults.standard.set(1.0, forKey: Design.scaleKey)
+        NotchLayout.recompute()
+    }
+
     func testRingIsTheSpecAnchor() {
         XCTAssertEqual(NotchLayout.ringDiameter, 44, accuracy: 0.001)
     }

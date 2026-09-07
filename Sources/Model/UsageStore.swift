@@ -14,13 +14,16 @@ final class UsageStore: ObservableObject {
     @Published private(set) var refusedAccess: Set<String> = []
 
     private let providers: [UsageProvider]
+    /// Optional closure that reorders provider IDs according to user preference.
+    private var sortOrder: ([String]) -> [String]
     /// Providers the user has switched off. They are not fetched at all — their
     /// credential is never read, which is the whole point of switching one off.
     /// Filtering the results afterwards would still touch the keychain.
     @Published var disconnected: Set<String> = [] {
         didSet {
             guard disconnected != oldValue else { return }
-            snapshots.removeAll { disconnected.contains($0.id) }
+            // Use filter-assignment so @Published emits; in-place removeAll does not.
+            snapshots = snapshots.filter { !disconnected.contains($0.id) }
             // The remembered reading has to go as well. Dropping it from
             // `snapshots` alone left it in `lastGood`, which is written to the
             // archive wholesale on every fetch — so a switched-off provider was
@@ -67,9 +70,11 @@ final class UsageStore: ObservableObject {
         idleRefreshInterval: TimeInterval = 5 * 60,
         staleAfter: TimeInterval = 15 * 60,
         archive: UsageArchive = UsageArchive(),
-        disconnected: Set<String> = []
+        disconnected: Set<String> = [],
+        sortOrder: @escaping ([String]) -> [String] = { $0 }
     ) {
         self.providers = providers
+        self.sortOrder = sortOrder
         self.refreshInterval = refreshInterval
         self.idleRefreshInterval = idleRefreshInterval
         self.staleAfter = staleAfter
@@ -185,7 +190,22 @@ final class UsageStore: ObservableObject {
         for provider in live {
             next.append(await snapshot(from: provider))
         }
-        snapshots = next
+        // Apply the user's chosen order before publishing.
+        let orderedIDs = sortOrder(next.map(\.id))
+        let idIndex = Dictionary(uniqueKeysWithValues: orderedIDs.enumerated().map { ($1, $0) })
+        snapshots = next.sorted {
+            (idIndex[$0.id] ?? Int.max) < (idIndex[$1.id] ?? Int.max)
+        }
+    }
+
+    /// Re-sort existing snapshots without fetching. Called when the user drags
+    /// a provider to a new position in Settings.
+    func reorder() {
+        let orderedIDs = sortOrder(snapshots.map(\.id))
+        let idIndex = Dictionary(uniqueKeysWithValues: orderedIDs.enumerated().map { ($1, $0) })
+        snapshots = snapshots.sorted {
+            (idIndex[$0.id] ?? Int.max) < (idIndex[$1.id] ?? Int.max)
+        }
     }
 
     /// Refetch one provider, leaving the others alone.
@@ -198,18 +218,23 @@ final class UsageStore: ObservableObject {
               !disconnected.contains(providerID),
               !refreshing.contains(providerID) else { return }
 
-        refreshing.insert(providerID)
+        // Union-assignment so @Published emits; insert alone does not.
+        refreshing = refreshing.union([providerID])
         Task { [weak self] in
             let fresh = await self?.snapshot(from: provider)
             guard let self, let fresh else { return }
             if let index = self.snapshots.firstIndex(where: { $0.id == providerID }) {
-                self.snapshots[index] = fresh
+                // Copy-assign so @Published emits; subscript mutation alone does not.
+                var newSnapshots = self.snapshots
+                newSnapshots[index] = fresh
+                self.snapshots = newSnapshots
             }
             self.lastAttempt = Date()
             // A beat of visible work even when the answer was instant: a spinner
             // that flashes for one frame reads as a glitch, not as a refresh.
             try? await Task.sleep(nanoseconds: 380_000_000)
-            self.refreshing.remove(providerID)
+            // Filter-assignment so @Published emits; remove alone does not.
+            self.refreshing = self.refreshing.filter { $0 != providerID }
         }
     }
 
@@ -228,7 +253,8 @@ final class UsageStore: ObservableObject {
     func signOut(providerID: String) {
         guard let provider = providers.first(where: { $0.id == providerID }) else { return }
 
-        snapshots.removeAll { $0.id == providerID }
+        // Filter-assignment so @Published emits; removeAll alone does not.
+        snapshots = snapshots.filter { $0.id != providerID }
         lastGood.removeValue(forKey: providerID)
         archive.forget(providerID)
 
@@ -302,7 +328,8 @@ final class UsageStore: ObservableObject {
             let fresh = try await provider.fetchSnapshot()
             lastGood[provider.id] = (fresh, Date())
             archive.save(lastGood)
-            refusedAccess.remove(provider.id)
+            // Filter-assignment so @Published emits; remove alone does not.
+            refusedAccess = refusedAccess.filter { $0 != provider.id }
             Log.usage.debug("\(provider.id, privacy: .public): \(fresh.windows.count) window(s)")
             return fresh
         } catch {
@@ -323,9 +350,11 @@ final class UsageStore: ObservableObject {
         // fact the settings row needs: whether macOS let us in last time. Two
         // different questions, so two different places to keep the answer.
         if case .accessDenied = status {
-            refusedAccess.insert(provider.id)
+            // Union-assignment so @Published emits; insert alone does not.
+            refusedAccess = refusedAccess.union([provider.id])
         } else {
-            refusedAccess.remove(provider.id)
+            // Filter-assignment so @Published emits; remove alone does not.
+            refusedAccess = refusedAccess.filter { $0 != provider.id }
         }
 
         // Some failures are statements about the account rather than a hiccup:

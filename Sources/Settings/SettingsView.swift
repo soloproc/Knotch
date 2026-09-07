@@ -31,11 +31,18 @@ struct SettingsView: View {
         Form {
             Section("Integrations") {
                 if needsSetup { setupNote }
-                ForEach(accounts) {
-                    AccountRow(provider: $0, preferences: preferences,
+                // Re-orderable list: drag a row by its handle to change the
+                // order the rings appear in the notch.
+                ForEach(accounts) { account in
+                    AccountRow(provider: account, preferences: preferences,
                                signOut: signOut, signIn: signIn,
                                switchAccount: switchAccount, retry: retry)
                 }
+                .onMove { indices, newOffset in
+                    accounts.move(fromOffsets: indices, toOffset: newOffset)
+                    preferences.providerOrder = accounts.map(\.id)
+                }
+
                 // Beside the switches it explains, not stranded at the end of
                 // the page.
                 Text("Codenotch never signs in — each reading is borrowed from the "
@@ -82,6 +89,21 @@ struct SettingsView: View {
                 .pickerStyle(.segmented)
 
                 Text(preferences.appPresence.explanation)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                // Size slider: changes the global scale of the notch surface.
+                HStack(spacing: 12) {
+                    Text("Size")
+                        .frame(width: 40, alignment: .leading)
+                    Slider(value: $preferences.notchScale, in: 0.5...1.5, step: 0.05)
+                    Text("\(Int((preferences.notchScale * 100).rounded()))%")
+                        .monospacedDigit()
+                        .frame(width: 44, alignment: .trailing)
+                }
+
+                Text("How large the notch and its rings appear on screen.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -175,7 +197,8 @@ struct SettingsView: View {
     static let width: CGFloat = 500
     /// Tall enough that Startup and Updates are visible without scrolling —
     /// four account rows push everything below them a long way down.
-    static let height: CGFloat = 560
+    /// Increased slightly to make room for the size slider.
+    static let height: CGFloat = 620
 
     /// Nothing to read from anywhere. On a first launch that is the normal
     /// state, and it is the only moment the sheet has something to explain.
@@ -250,6 +273,12 @@ private struct AccountRow: View {
             // Everything on this row is a single line, so centring is what makes
             // the mark, the name, the button and the switch sit on one axis.
             HStack(alignment: .center, spacing: 10) {
+                // Drag handle for re-ordering the provider list.
+                Image(systemName: "line.horizontal.3")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .padding(.trailing, 2)
+
                 ProviderGlyphView(glyph: provider.glyph, size: 16)
                     .foregroundStyle(isConnected ? .primary : .tertiary)
 
