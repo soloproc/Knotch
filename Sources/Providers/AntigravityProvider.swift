@@ -55,7 +55,19 @@ actor AntigravityProvider: UsageProvider {
 
     nonisolated func forgetCachedCredential() { AntigravityCredentials.forgetCached() }
 
+    /// Whether this provider has been switched off in Settings. A defensive
+    /// check: `UsageStore` already skips disconnected providers, but if a call
+    /// ever reaches us anyway — the cache is empty after a relaunch — this
+    /// stops the keychain from being touched for a provider the user explicitly
+    /// disconnected.
+    private static func isDisconnected(_ providerID: String) -> Bool {
+        let key = "hiddenProviders"
+        let disconnected = Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+        return disconnected.contains(providerID)
+    }
+
     nonisolated func account() -> ProviderAccount? {
+        guard !Self.isDisconnected(id) else { return nil }
         guard let credentials = try? AntigravityCredentials.load() else { return nil }
         return ProviderAccount(
             label: nil,   // the token carries no address
@@ -66,6 +78,9 @@ actor AntigravityProvider: UsageProvider {
     }
 
     func fetchSnapshot() async throws -> ProviderSnapshot {
+        guard !Self.isDisconnected(id) else {
+            throw UsageProviderError.needsAuth
+        }
         let credentials = try AntigravityCredentials.load()
         // Expired is not signed out: Antigravity refreshes this on its own the
         // next time it runs, and the last reading is still true, just old.

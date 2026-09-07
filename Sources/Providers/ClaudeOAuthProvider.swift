@@ -57,6 +57,9 @@ actor ClaudeOAuthProvider: UsageProvider {
     }
 
     func fetchSnapshot() async throws -> ProviderSnapshot {
+        guard !Self.isDisconnected(id) else {
+            throw UsageProviderError.needsAuth
+        }
         if let retryNoEarlierThan, retryNoEarlierThan > Date() {
             let remaining = retryNoEarlierThan.timeIntervalSinceNow
             Log.usage.debug("skipping fetch, backing off for \(remaining, format: .fixed(precision: 0))s")
@@ -205,7 +208,19 @@ actor ClaudeOAuthProvider: UsageProvider {
 
     nonisolated func forgetCachedCredential() { keychain.forgetCached() }
 
+    /// Whether this provider has been switched off in Settings. A defensive
+    /// check: `UsageStore` already skips disconnected providers, but if a call
+    /// ever reaches us anyway — the cache is empty after a relaunch — this
+    /// stops the keychain from being touched for a provider the user explicitly
+    /// disconnected.
+    private static func isDisconnected(_ providerID: String) -> Bool {
+        let key = "hiddenProviders"
+        let disconnected = Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+        return disconnected.contains(providerID)
+    }
+
     nonisolated func account() -> ProviderAccount? {
+        guard !Self.isDisconnected(id) else { return nil }
         guard let credentials = try? keychain.load() else { return nil }
         return ProviderAccount(
             label: nil,   // the credential carries no address
