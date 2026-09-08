@@ -96,7 +96,8 @@ final class ClaudeOAuthProviderTests: XCTestCase {
 
         return ClaudeOAuthProvider(session: StubEndpoint.session(),
                                    archive: UsageArchive(defaults: defaults),
-                                   loadCredentials: { try source.read() })
+                                   loadCredentials: { try source.read() },
+                                   settingsDefaults: defaults)
     }
 
     private func assertNeedsAuth(from provider: ClaudeOAuthProvider,

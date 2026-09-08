@@ -33,6 +33,12 @@ actor ClaudeOAuthProvider: UsageProvider {
     private var consecutiveRateLimits = 0
 
     private let archive: UsageArchive
+    /// Where the "hidden providers" setting lives. Injected so tests run
+    /// against an isolated suite: the guard reads the real
+    /// `UserDefaults.standard`, and on a machine where Claude is switched off
+    /// every fetch would otherwise short-circuit before the test's stub ever
+    /// saw a request.
+    nonisolated private let settingsDefaults: UserDefaults
     /// How this profile's token is obtained. Injected for the same reason
     /// `session` is: the token path had no tests, which is how a back-off that
     /// never expired shipped. Production reads through this profile's own
@@ -42,7 +48,8 @@ actor ClaudeOAuthProvider: UsageProvider {
     init(profile: ClaudeProfile = .default(),
          session: URLSession = .shared,
          archive: UsageArchive = UsageArchive(),
-         loadCredentials: (@Sendable () throws -> ClaudeCredentials)? = nil) {
+         loadCredentials: (@Sendable () throws -> ClaudeCredentials)? = nil,
+         settingsDefaults: UserDefaults = .standard) {
         self.profile = profile
         self.id = profile.id
         self.displayName = profile.displayName
@@ -51,13 +58,14 @@ actor ClaudeOAuthProvider: UsageProvider {
         self.loadCredentials = loadCredentials ?? { try keychain.load() }
         self.session = session
         self.archive = archive
+        self.settingsDefaults = settingsDefaults
         // Pick the back-off back up where the last run left it, so relaunching
         // during a penalty does not spend an attempt extending it.
         self.retryNoEarlierThan = archive.loadBackoffUntil(providerID: profile.id)
     }
 
     func fetchSnapshot() async throws -> ProviderSnapshot {
-        guard !Self.isDisconnected(id) else {
+        guard !isDisconnected(id) else {
             throw UsageProviderError.needsAuth
         }
         if let retryNoEarlierThan, retryNoEarlierThan > Date() {
@@ -213,14 +221,14 @@ actor ClaudeOAuthProvider: UsageProvider {
     /// ever reaches us anyway — the cache is empty after a relaunch — this
     /// stops the keychain from being touched for a provider the user explicitly
     /// disconnected.
-    private static func isDisconnected(_ providerID: String) -> Bool {
+    nonisolated private func isDisconnected(_ providerID: String) -> Bool {
         let key = "hiddenProviders"
-        let disconnected = Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+        let disconnected = Set(settingsDefaults.stringArray(forKey: key) ?? [])
         return disconnected.contains(providerID)
     }
 
     nonisolated func account() -> ProviderAccount? {
-        guard !Self.isDisconnected(id) else { return nil }
+        guard !isDisconnected(id) else { return nil }
         guard let credentials = try? keychain.load() else { return nil }
         return ProviderAccount(
             label: nil,   // the credential carries no address
