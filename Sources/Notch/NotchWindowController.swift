@@ -51,8 +51,36 @@ final class NotchWindowController {
     /// rect comparison every 0.3s and needs no new machinery.
     private var lastVisibleFrame: CGRect?
 
-    func show() {
-        relocate()
+    /// Whether the first placement has happened. The panel is deliberately
+    /// held back until the display arrangement has been stable for a beat:
+    /// at login and on display wake the screen list flickers (disappear,
+    /// reappear, rearrange), and a notch that is placed during the flux
+    /// lands wherever the arrangement happened to be mid-change — visibly
+    /// jumping to the right edge a moment later.
+    private var initialPlacementDone = false
+    private var screenFluxWork: DispatchWorkItem?
+    /// How long the arrangement must hold still before the first placement.
+    private static let screenSettleDelay: TimeInterval = 0.4
+    /// Hard cap on waiting for quiet: the notch may be a beat late, never absent.
+    private static let initialPlacementDeadline: TimeInterval = 2.0
+    private var showDate = Date.distantPast
+
+    /// How the first placement is timed. Production waits for the display
+    /// arrangement to settle (see `scheduleInitialPlacement`); tests place
+    /// immediately.
+    enum PlacementTiming {
+        case whenScreenSettles
+        case immediately
+    }
+
+    func show(placement: PlacementTiming = .whenScreenSettles) {
+        showDate = Date()
+        if placement == .immediately {
+            initialPlacementDone = true
+            relocate()
+        } else {
+            scheduleInitialPlacement()
+        }
         startWatchingCursor()
         startClock()
 
@@ -60,7 +88,7 @@ final class NotchWindowController {
             for: NSApplication.didChangeScreenParametersNotification
         )
         .sink { [weak self] _ in
-            MainActor.assumeIsolated { self?.relocate() }
+            MainActor.assumeIsolated { self?.screensChanged() }
         }
         .store(in: &cancellables)
 
@@ -125,7 +153,44 @@ final class NotchWindowController {
 
     // MARK: - Placement
 
+    /// Screen parameters changed. Before the first placement that is a sign
+    /// the arrangement is still settling (login, display wake), so the wait
+    /// restarts; afterwards the panel follows the change at once, as it always
+    /// has.
+    private func screensChanged() {
+        if initialPlacementDone {
+            relocate()
+        } else {
+            scheduleInitialPlacement()
+        }
+    }
+
+    /// Place the panel once the arrangement has held still for
+    /// `screenSettleDelay`, with a hard deadline so a genuinely unstable
+    /// setup cannot keep the notch off screen.
+    private func scheduleInitialPlacement() {
+        screenFluxWork?.cancel()
+        let elapsed = Date().timeIntervalSince(showDate)
+        guard elapsed + Self.screenSettleDelay <= Self.initialPlacementDeadline else {
+            initialPlacementDone = true
+            relocate()
+            return
+        }
+        let work = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, !self.initialPlacementDone else { return }
+                self.initialPlacementDone = true
+                self.relocate()
+            }
+        }
+        screenFluxWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.screenSettleDelay, execute: work)
+    }
+
     func relocate(cellCount: Int? = nil) {
+        // No panel before the arrangement settles: the deferred initial
+        // placement sizes from the live model when it runs.
+        guard initialPlacementDone || panel != nil else { return }
         guard let screen = NotchGeometry.preferredScreen(from: NSScreen.screens) else { return }
         model.adopt(screen: screen)
         let size = model.panelSize(cellCount: cellCount ?? model.snapshots.count)

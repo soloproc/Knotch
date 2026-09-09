@@ -213,6 +213,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 .store(in: &cancellables)
             monitor.start()
         }
+        // The store already holds the archived readings synchronously — seeding
+        // the model before the panel goes up means the first placement is
+        // already the right size. Without this the panel goes up empty and
+        // visibly grows a beat later, when the deferred `store.$snapshots`
+        // delivery lands.
+        controller.model.snapshots = store?.snapshots ?? []
+
         // Poll usage hard only while something is actually running.
         store?.isBusy = { monitors.values.contains { m in m.sessions.contains { $0.state == .busy } } }
         self.monitors = monitors

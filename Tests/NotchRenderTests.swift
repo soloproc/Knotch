@@ -103,7 +103,7 @@ final class NotchRenderTests: XCTestCase {
 final class PanelSizingIntegrityTests: XCTestCase {
     func testSwiftUIIsNotThePanelsContentView() {
         let controller = NotchWindowController()
-        controller.show()
+        controller.show(placement: .immediately)
         defer { controller.stop() }
 
         let content = controller.panelContentViewForTesting
@@ -117,7 +117,7 @@ final class PanelSizingIntegrityTests: XCTestCase {
     /// And it still fills the panel, however the panel is later re-framed.
     func testTheHostingViewTracksThePanelWhenItIsReFramed() {
         let controller = NotchWindowController()
-        controller.show()
+        controller.show(placement: .immediately)
         defer { controller.stop() }
 
         controller.apply(edge: .top)
@@ -138,7 +138,7 @@ final class PanelSizingIntegrityTests: XCTestCase {
 final class ClickThroughTests: XCTestCase {
     private func shownController() -> NotchWindowController {
         let controller = NotchWindowController()
-        controller.show()
+        controller.show(placement: .immediately)
         return controller
     }
 
@@ -190,7 +190,7 @@ final class EdgeCrossfadeTests: XCTestCase {
 
     func testTheNotchFadesOutBeforeItMoves() {
         let controller = NotchWindowController()
-        controller.show()
+        controller.show(placement: .immediately)
         defer { controller.stop() }
 
         let before = controller.panelFrameForTesting
@@ -205,7 +205,7 @@ final class EdgeCrossfadeTests: XCTestCase {
 
     func testItComesBackOnTheNewEdgeAtFullStrength() {
         let controller = NotchWindowController()
-        controller.show()
+        controller.show(placement: .immediately)
         defer { controller.stop() }
 
         controller.apply(edge: .bottom)
@@ -224,7 +224,7 @@ final class EdgeCrossfadeTests: XCTestCase {
     /// after a later one.
     func testOnlyTheLastEdgeAskedForWins() {
         let controller = NotchWindowController()
-        controller.show()
+        controller.show(placement: .immediately)
         defer { controller.stop() }
 
         controller.apply(edge: .top)
@@ -239,7 +239,7 @@ final class EdgeCrossfadeTests: XCTestCase {
     /// Asking for the edge it is already on is not a move.
     func testAskingForTheSameEdgeDoesNothing() {
         let controller = NotchWindowController()
-        controller.show()
+        controller.show(placement: .immediately)
         defer { controller.stop() }
 
         controller.apply(edge: controller.model.edge)
@@ -259,7 +259,7 @@ final class EdgeArrivalTests: XCTestCase {
 
     private func openController() -> NotchWindowController {
         let controller = NotchWindowController()
-        controller.show()
+        controller.show(placement: .immediately)
         controller.model.snapshots = (0..<3).map { index in
             ProviderSnapshot(id: "p\(index)", displayName: "P", glyph: .claude,
                              fidelity: .official, status: .ok, windows: [])
